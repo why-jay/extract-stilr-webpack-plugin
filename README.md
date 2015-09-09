@@ -108,6 +108,8 @@ class App extends React.Component {
     );
   }
 }
+
+React.render(<App />, document.body);
 ```
 
 In order for this code to work across both states (`showBlueText === true` and
