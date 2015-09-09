@@ -118,7 +118,7 @@ blue;}` and `{color: black;}`.
 But since this plugin works by running the code once in the initial application
 state, the state `showBlueText === true` is never reached, and therefore the
 style `{color: blue;}` is never extracted.
-So the text won't appear blue, despite your intention, because of the way this
+So the text won't appear blue after being clicked, because of the way this
 plugin works.
 
 How can we fix that code to make it work with this plugin then?
