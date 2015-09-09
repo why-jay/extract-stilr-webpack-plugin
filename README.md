@@ -77,8 +77,8 @@ module.exports.stilr = stilr;
 
 You'll get the following CSS file when you run `webpack`:
 
-```
-// YourProjName.v0q23f0q39jqp23fj0q.css
+```CSS
+/* YourProjName.v0q23f0q39jqp23fj0q.css */
 
 ._rEl7H{-webkit-box-align:center;-webkit-align-items:center;-ms-flex-align:center;align-items:center;color:#a9f23e;}
 ```
