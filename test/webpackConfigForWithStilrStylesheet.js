@@ -3,16 +3,16 @@ var ExtractStilrPlugin = require('../index');
 module.exports = {
   context: __dirname,
   entry: {
-    main: './entry'
+    main: './entryWithStilrStylesheet'
   },
   output: {
     path: __dirname + '/dist',
-    filename: 'main.js',
+    filename: 'withStilrStylesheet.js',
     libraryTarget: 'umd'
   },
   plugins: [
     new ExtractStilrPlugin({
-      filename: 'main.css'
+      filename: 'withStilrStylesheet.css'
     })
   ]
 };

@@ -15,7 +15,7 @@ var packageJson = getPackageJson();
 function Plugin(options) {
   this.options = options || {};
   this.options.chunkName = this.options.chunkName || 'main';
-  this.filenameBeforeInterpolation =
+  this.CSSFilenameBeforeInterpolation =
     this.options.filename || '[projname].[hash].css';
 }
 
@@ -30,6 +30,10 @@ Plugin.prototype.apply = function (compiler) {
   }
 
   compiler.plugin('emit', function(compiler, callback) {
+    var targetChunk = compiler.chunks.filter(function (chunk) {
+      return chunk.name === self.options.chunkName;
+    })[0];
+
     self.stats = compiler.getStats().toJson();
 
     var assetsInTargetChunk =
@@ -56,11 +60,62 @@ Plugin.prototype.apply = function (compiler) {
       true // includeGlobals
     );
 
-    var stilrStylesheet =
-      postcss(autoprefixer()).process(evalResult.stilr.render()).css;
+    var stilrStylesheet;
+    if (evalResult.stilr && !evalResult.stilrStylesheet) {
 
-    var interpolatedFilename =
-      self.filenameBeforeInterpolation
+      stilrStylesheet =
+        postcss(autoprefixer()).process(evalResult.stilr.render()).css;
+
+    } else if (evalResult.stilrStylesheet) {
+
+      stilrStylesheet = evalResult.stilrStylesheet;
+
+      const jsSourceWithStilrCSSRemoved = source.replace(stilrStylesheet, '');
+
+      delete compiler.assets[mainJSFileNameOfTargetChunk];
+      targetChunk.files = targetChunk.files.filter(function (file) {
+        return file !== mainJSFileNameOfTargetChunk;
+      });
+
+      const newMainJSFilename =
+        compiler.options.output.filename
+          .replace(/\[name]/g, self.options.chunkName)
+          .replace(
+            /\[(?:(\w+):)?hash(?::([a-z]+\d*))?(?::(\d+))?\]/ig,
+            function() {
+              return loaderUtils.getHashDigest(
+                jsSourceWithStilrCSSRemoved,
+                arguments[1],
+                arguments[2],
+                parseInt(arguments[3], 10)
+              );
+            }
+          );
+
+      compiler.assets[newMainJSFilename] = {
+        source: function () {
+          return jsSourceWithStilrCSSRemoved;
+        },
+        size: function () {
+          return jsSourceWithStilrCSSRemoved.length;
+        }
+      };
+      targetChunk.files.push(newMainJSFilename);
+      targetChunk.hash =
+      targetChunk.renderedHash =
+      compiler.hash =
+        loaderUtils.getHashDigest(jsSourceWithStilrCSSRemoved);
+
+    } else {
+
+      throw new Error('extract-stilr-webpack-plugin:' +
+        'Your entry point must export either property: `exports.stilr` or ' +
+        '`exports.stilrStylesheeet');
+
+    }
+
+    var interpolatedCSSFilename =
+      self.CSSFilenameBeforeInterpolation
         .replace(/\[projname]/g, packageJson.name)
         .replace(
           /\[(?:(\w+):)?hash(?::([a-z]+\d*))?(?::(\d+))?\]/ig,
@@ -73,7 +128,7 @@ Plugin.prototype.apply = function (compiler) {
             );
           });
 
-    compiler.assets[interpolatedFilename] = {
+    compiler.assets[interpolatedCSSFilename] = {
       source: function () {
         return stilrStylesheet
       },
@@ -81,6 +136,7 @@ Plugin.prototype.apply = function (compiler) {
         return stilrStylesheet.length
       }
     };
+    targetChunk.files.push(interpolatedCSSFilename);
 
     callback();
 

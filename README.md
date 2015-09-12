@@ -1,10 +1,21 @@
 # extract-stilr-webpack-plugin
 
-This plugin extracts the style rules that are observed **in the initial state of
-the application** into a CSS file, which you can use for production environment.
+This plugin works in two quite different ways.
+
+If your entry point exports property `stilrStylesheet`, which is assumed to be a
+string, this plugin writes that string into a file of your choice and removes
+that string from the final output of the JS file (i.e. `exports.stilrStylesheet
+= 'blah';` will turn in to `exports.stilrStylesheet = '';`).
+
+If your entry point does not export property `stilrStylesheet` and exports
+property `stilr`, which is assumed to be what is exported by `require('stilr')`,
+then this plugin extracts the style rules that are observed **in the initial
+state of the application** into a file of your choice.
 The rules are vendor-prefixed, using Autoprefixer.
 
 ## Example
+
+### Exports `stilrStylesheet`
 
 Given the following files:
 
@@ -40,7 +51,87 @@ module.exports = {
       // options.filename defines the file name of the CSS file that is
       // generated.
       //
-      // You can use to keywords.
+      // You can use two keywords.
+      // [projname] will read in your project's package.json and replace itself
+      // with the project name.
+      // [hash] will replace itself with the hash of the CSS content.
+      //
+      // If you don't specify this option yourself, the default value is
+      // "[projname].[hash].css".
+      filename: '[projname].[hash].css'
+    })
+  ]
+};
+```
+```JS
+// entry.js
+
+// The entry file of your target chunk MUST EXPORT property
+// exports.stilrStylesheet, which must be a string.
+//
+// The plugin will move this string into the filename you specified in the
+// webpack configuration.
+//
+// This is why `output.libraryTarget` has to be "umd" in your webpack config.
+// In other library target modes, running the code in entry.js and then
+// importing its exports doesn't work.
+module.exports.stilrStylesheet = 'blah';
+```
+
+You'll get the following CSS file in your output directory when you run
+`webpack`:
+
+```CSS
+/* YourProjName.98v2va09f3j0afw3f.css */
+
+blah
+```
+
+and the following JS file:
+
+```JS
+// entry.js
+
+module.exports.stilrStylesheet = '';
+```
+
+### Exports `stilr` and does not export `stilrStylesheet`
+
+Given the following files:
+
+```JS
+// webpack.config.js
+
+var ExtractStilrPlugin = require('extract-stilr-webpack-plugin');
+
+module.exports = {
+  entry: {
+    main: './entry' // Note this chunk's name is "main".
+  },
+  output: {
+    path: __dirname + '/dist',
+    filename: 'main.js',
+    
+    // output.libraryTarget MUST BE "umd"!
+    // The reason is explained in the next file.
+    // If output.libraryTarget is not "umd", this plugin will throw an Error and
+    // refuse to run.
+    libraryTarget: 'umd'
+  },
+  plugins: [
+    new ExtractStilrPlugin({
+      // options
+      
+      // options.chunkName has to match the name of the chunk that you want to
+      // execute Stilr in and extract the rendered stylesheet.
+      //
+      // If you don't specify this option yourself, the default value is "main".
+      chunkName: 'main',
+      
+      // options.filename defines the file name of the CSS file that is
+      // generated.
+      //
+      // You can use two keywords.
       // [projname] will read in your project's package.json and replace itself
       // with the project name.
       // [hash] will replace itself with the hash of the CSS content.
