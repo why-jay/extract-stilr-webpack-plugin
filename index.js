@@ -61,12 +61,12 @@ Plugin.prototype.apply = function (compiler) {
     );
 
     var stilrStylesheet;
-    if (evalResult.stilr && !evalResult.stilrStylesheet) {
+    if (evalResult.stilr && !_.isString(evalResult.stilrStylesheet)) {
 
       stilrStylesheet =
         postcss(autoprefixer()).process(evalResult.stilr.render()).css;
 
-    } else if (evalResult.stilrStylesheet) {
+    } else if (_.isString(evalResult.stilrStylesheet)) {
 
       stilrStylesheet = evalResult.stilrStylesheet;
 

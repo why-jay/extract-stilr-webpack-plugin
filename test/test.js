@@ -101,6 +101,19 @@ describe('The plugin', function () {
       expect(webpackStats.chunks[0].hash).to.be.equal(expectedHash);
     });
 
+    it('does not throw when exports.stilrStylesheet is an empty string',
+      function (done) {
+        var webpackConfig =
+          require('./webpackConfigForWithStilrStylesheet_emptyExport');
+        webpack(webpackConfig, function (err) {
+          if (err) {
+            throw err;
+          }
+          done();
+        });
+
+      });
+
   });
 
 
