@@ -1,6 +1,6 @@
 {
   "name": "extract-stilr-webpack-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Extract stilr stylesheets for production use.",
   "main": "index.js",
   "scripts": {
